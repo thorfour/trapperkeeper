@@ -11,7 +11,7 @@ func TestHumanReadableTime(t *testing.T) {
 	c := connectRedis()
 	c.Del(windowKey)
 
-	expire := strings.Split("3d1h", " ")
+	expire := strings.Split("3h", " ")
 	fmt.Println("New Window: ", expire)
 
 	if err := Handle(new, "0", "test", expire); err != nil {
