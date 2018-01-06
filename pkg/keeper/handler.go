@@ -53,7 +53,7 @@ func Handle(cmd, uid, uname string, args []string) error {
 func currentWindow(uid, uname string, args []string) error {
 	c := connectRedis()
 	w, err := getWindow(c)
-	if err == nil {
+	if err != nil {
 		return NoActivWin
 	}
 
