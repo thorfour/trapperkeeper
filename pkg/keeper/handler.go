@@ -21,7 +21,7 @@ const (
 	add     = "add"
 	release = "release"
 
-	timeLayout = "Jan 2 9:04PM MST" // time layout to parse
+	timeLayout = "Jan 2 3:04PM MST" // time layout to parse
 
 	windowKey = "window" // currently active window key
 
