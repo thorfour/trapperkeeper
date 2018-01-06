@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -12,7 +13,7 @@ import (
 var (
 	NoCmdErr   = fmt.Errorf("command not found")
 	NumArgsErr = fmt.Errorf("wrong number of args")
-	NoActivWin = fmt.Errorf("no window active. Try the 'new' command")
+	NoActivWin = fmt.Errorf("no window active. Try the new command")
 )
 
 const (
@@ -25,7 +26,7 @@ const (
 
 	windowKey = "window" // currently active window key
 
-	redisAddr = "localhost:6379"
+	redisAddr = ""
 	redisPw   = ""
 )
 
@@ -85,16 +86,14 @@ func addSubmission(uid, uname string, args []string) error {
 	s := strings.Join(args, " ") // rejoin the args into the submission string
 	w.Submissions[uid] = user{uid, uname, s}
 
+	fmt.Fprintf(os.Stderr, "Submitted: %s\n", s)
+
 	// save the window
 	return saveWindow(c, w)
 }
 
 // newWindow creates a new user submission window
 func newWindow(uid, uname string, args []string) error {
-	if len(args) != 1 {
-		return NumArgsErr
-	}
-
 	c := connectRedis()
 
 	// Ensure the current window is not active
@@ -111,7 +110,7 @@ func newWindow(uid, uname string, args []string) error {
 	}
 
 	// parse the time
-	newExpire, err := time.Parse(timeLayout, args[0])
+	newExpire, err := time.Parse(timeLayout, strings.Join(args, " "))
 	if err != nil {
 		return fmt.Errorf("bad time format: %v", err)
 	}
@@ -120,6 +119,8 @@ func newWindow(uid, uname string, args []string) error {
 	w.Expire = newExpire
 	w.Owner = uid
 	w.Submissions = make(map[string]user)
+
+	fmt.Printf("New pick window expires at %s\n", w.Expire.Format(prettyLayout))
 
 	// Save the window
 	return saveWindow(c, w)

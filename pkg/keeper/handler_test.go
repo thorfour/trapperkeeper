@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 )
@@ -20,10 +21,10 @@ func TestAddNewWindow(t *testing.T) {
 	c := connectRedis()
 	c.Del(windowKey)
 
-	expire := time.Now().Add(100 * time.Minute).Format(timeLayout)
+	expire := strings.Split(time.Now().Add(100*time.Minute).Format(timeLayout), " ")
 	fmt.Println("New Window: ", expire)
 
-	if err := Handle(new, "0", "test", []string{expire}); err != nil {
+	if err := Handle(new, "0", "test", expire); err != nil {
 		t.Error("failed to add new window: ", err)
 	}
 
@@ -37,10 +38,10 @@ func TestAddExpiredWindow(t *testing.T) {
 	c := connectRedis()
 	c.Del(windowKey)
 
-	expire := time.Now().Add(1 * time.Second).Format(timeLayout)
+	expire := strings.Split(time.Now().Add(1*time.Second).Format(timeLayout), " ")
 	fmt.Println("New Window: ", expire)
 
-	if err := Handle(new, "0", "test", []string{expire}); err != nil {
+	if err := Handle(new, "0", "test", expire); err != nil {
 		t.Error("failed to add new window: ", err)
 	}
 
@@ -56,10 +57,10 @@ func TestReleaseExpiredWindow(t *testing.T) {
 	c := connectRedis()
 	c.Del(windowKey)
 
-	expire := time.Now().Add(3 * time.Second).Format(timeLayout)
+	expire := strings.Split(time.Now().Add(3*time.Second).Format(timeLayout), " ")
 	fmt.Println("New Window: ", expire)
 
-	if err := Handle(new, "0", "test", []string{expire}); err != nil {
+	if err := Handle(new, "0", "test", expire); err != nil {
 		t.Error("failed to add new window: ", err)
 	}
 
@@ -81,10 +82,10 @@ func TestReleaseNotExpired(t *testing.T) {
 	c := connectRedis()
 	c.Del(windowKey)
 
-	expire := time.Now().Add(3 * time.Hour).Format(timeLayout)
+	expire := strings.Split(time.Now().Add(3*time.Hour).Format(timeLayout), " ")
 	fmt.Println("New Window: ", expire)
 
-	if err := Handle(new, "0", "test", []string{expire}); err != nil {
+	if err := Handle(new, "0", "test", expire); err != nil {
 		t.Error("failed to add new window: ", err)
 	}
 
