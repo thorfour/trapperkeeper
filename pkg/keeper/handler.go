@@ -21,8 +21,7 @@ const (
 	add     = "add"
 	release = "release"
 
-	timeLayout   = "Mon Jan 2 15:04:05 -0700 MST 2006" // time layout to parse
-	prettyLayout = "Mon Jan 2 15:04"                   // time layout to print
+	timeLayout = "Jan 2 9:04PM MST" // time layout to parse
 
 	windowKey = "window" // currently active window key
 
@@ -57,7 +56,7 @@ func releaseWindow(uid, uname string, args []string) error {
 	}
 
 	// Ensure the window has expired
-	if !time.Now().After(w.Expire) {
+	if time.Now().Unix() < w.Expire {
 		return fmt.Errorf("Window has not expired")
 	}
 
@@ -79,7 +78,7 @@ func addSubmission(uid, uname string, args []string) error {
 	}
 
 	// ensure the time hasn't expired
-	if time.Now().After(w.Expire) {
+	if time.Now().Unix() > w.Expire {
 		return fmt.Errorf("submission window has expired")
 	}
 
@@ -99,8 +98,8 @@ func newWindow(uid, uname string, args []string) error {
 	// Ensure the current window is not active
 	w, err := getWindow(c)
 	if err == nil {
-		if !time.Now().After(w.Expire) {
-			return fmt.Errorf("current window is still active until %v", w.Expire.Format(prettyLayout))
+		if time.Now().Unix() < w.Expire {
+			return fmt.Errorf("current window is still active until %v", time.Unix(w.Expire, 0).Format(timeLayout))
 		}
 	}
 
@@ -109,18 +108,18 @@ func newWindow(uid, uname string, args []string) error {
 		w = &window{}
 	}
 
-	// parse the time
-	newExpire, err := time.Parse(timeLayout, strings.Join(args, " "))
+	// parse the window duration
+	duration, err := time.ParseDuration(strings.Join(args, " "))
 	if err != nil {
 		return fmt.Errorf("bad time format: %v", err)
 	}
 
 	// Set the new window
-	w.Expire = newExpire
+	w.Expire = time.Now().Add(duration).Unix()
 	w.Owner = uid
 	w.Submissions = make(map[string]user)
 
-	fmt.Printf("New pick window expires at %s\n", w.Expire.Format(prettyLayout))
+	fmt.Printf("New pick window expires at %s\n", time.Unix(w.Expire, 0).Format(timeLayout))
 
 	// Save the window
 	return saveWindow(c, w)

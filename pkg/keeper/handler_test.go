@@ -7,6 +7,18 @@ import (
 	"time"
 )
 
+func TestHumanReadableTime(t *testing.T) {
+	c := connectRedis()
+	c.Del(windowKey)
+
+	expire := strings.Split("3d1h", " ")
+	fmt.Println("New Window: ", expire)
+
+	if err := Handle(new, "0", "test", expire); err != nil {
+		t.Error("failed to add new window: ", err)
+	}
+}
+
 func TestNoWindow(t *testing.T) {
 	c := connectRedis()
 	c.Del(windowKey)
@@ -21,7 +33,7 @@ func TestAddNewWindow(t *testing.T) {
 	c := connectRedis()
 	c.Del(windowKey)
 
-	expire := strings.Split(time.Now().Add(100*time.Minute).Format(timeLayout), " ")
+	expire := strings.Split("1h", " ")
 	fmt.Println("New Window: ", expire)
 
 	if err := Handle(new, "0", "test", expire); err != nil {
@@ -38,7 +50,7 @@ func TestAddExpiredWindow(t *testing.T) {
 	c := connectRedis()
 	c.Del(windowKey)
 
-	expire := strings.Split(time.Now().Add(1*time.Second).Format(timeLayout), " ")
+	expire := strings.Split("1s", " ")
 	fmt.Println("New Window: ", expire)
 
 	if err := Handle(new, "0", "test", expire); err != nil {
@@ -57,7 +69,7 @@ func TestReleaseExpiredWindow(t *testing.T) {
 	c := connectRedis()
 	c.Del(windowKey)
 
-	expire := strings.Split(time.Now().Add(3*time.Second).Format(timeLayout), " ")
+	expire := strings.Split("3s", " ")
 	fmt.Println("New Window: ", expire)
 
 	if err := Handle(new, "0", "test", expire); err != nil {
@@ -82,7 +94,7 @@ func TestReleaseNotExpired(t *testing.T) {
 	c := connectRedis()
 	c.Del(windowKey)
 
-	expire := strings.Split(time.Now().Add(3*time.Hour).Format(timeLayout), " ")
+	expire := strings.Split("3h", " ")
 	fmt.Println("New Window: ", expire)
 
 	if err := Handle(new, "0", "test", expire); err != nil {
