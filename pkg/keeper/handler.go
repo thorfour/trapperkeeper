@@ -57,7 +57,7 @@ func currentWindow(uid, uname string, args []string) error {
 		return NoActivWin
 	}
 
-	fmt.Println("Current window is active until %v", time.Unix(w.Expire, 0).Format(timeLayout))
+	fmt.Printf("Current window is active until %v\n", time.Unix(w.Expire, 0).Format(timeLayout))
 	return nil
 }
 
