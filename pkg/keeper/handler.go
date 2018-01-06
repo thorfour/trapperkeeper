@@ -20,6 +20,7 @@ const (
 	new     = "new"
 	add     = "add"
 	release = "release"
+	current = "window"
 
 	timeLayout = "Jan 2 3:04PM MST" // time layout to parse
 
@@ -33,6 +34,7 @@ var lookup = map[string]func(string, string, []string) error{
 	new:     newWindow,
 	add:     addSubmission,
 	release: releaseWindow,
+	current: currentWindow,
 }
 
 // Handle will process a given command
@@ -45,6 +47,18 @@ func Handle(cmd, uid, uname string, args []string) error {
 
 	// Execute the command
 	return f(uid, uname, args)
+}
+
+// currentWindow will print the current window
+func currentWindow(uid, uname string, args []string) error {
+	c := connectRedis()
+	w, err := getWindow(c)
+	if err == nil {
+		return NoActivWin
+	}
+
+	fmt.Println("Current window is active until %v", time.Unix(w.Expire, 0).Format(timeLayout))
+	return nil
 }
 
 // release window will return the submissions from the current window
