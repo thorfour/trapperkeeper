@@ -3,7 +3,6 @@ package keeper
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -11,9 +10,12 @@ import (
 )
 
 var (
-	NoCmdErr   = fmt.Errorf("command not found")
-	NumArgsErr = fmt.Errorf("wrong number of args")
-	NoActivWin = fmt.Errorf("no window active. Try the new command")
+	errNoCmd      = fmt.Errorf("command not found")
+	errNoActivWin = fmt.Errorf("no window active. Try the new command")
+	// RedisAddr is the redis enpoint to use
+	RedisAddr string
+	// RedisPw is if the endpoint has a password
+	RedisPw string
 )
 
 const (
@@ -25,12 +27,9 @@ const (
 	timeLayout = "Jan 2 3:04PM MST" // time layout to parse
 
 	windowKey = "window" // currently active window key
-
-	redisAddr = ""
-	redisPw   = ""
 )
 
-var lookup = map[string]func(string, string, []string) error{
+var lookup = map[string]func(string, string, []string) (string, error){
 	new:     newWindow,
 	add:     addSubmission,
 	release: releaseWindow,
@@ -38,11 +37,11 @@ var lookup = map[string]func(string, string, []string) error{
 }
 
 // Handle will process a given command
-func Handle(cmd, uid, uname string, args []string) error {
+func Handle(cmd, uid, uname string, args []string) (string, error) {
 	// Lookup the command
 	f, ok := lookup[cmd]
 	if !ok {
-		return NoCmdErr
+		return "", errNoCmd
 	}
 
 	// Execute the command
@@ -50,28 +49,27 @@ func Handle(cmd, uid, uname string, args []string) error {
 }
 
 // currentWindow will print the current window
-func currentWindow(uid, uname string, args []string) error {
+func currentWindow(uid, uname string, args []string) (string, error) {
 	c := connectRedis()
 	w, err := getWindow(c)
 	if err != nil {
-		return NoActivWin
+		return "", errNoActivWin
 	}
 
-	fmt.Printf("Current window is active until %v\n", time.Unix(w.Expire, 0).Format(timeLayout))
-	return nil
+	return fmt.Sprintf("Current window is active until %v\n", time.Unix(w.Expire, 0).Format(timeLayout)), nil
 }
 
 // release window will return the submissions from the current window
-func releaseWindow(uid, uname string, args []string) error {
+func releaseWindow(uid, uname string, args []string) (string, error) {
 	c := connectRedis()
 	w, err := getWindow(c)
 	if err != nil {
-		return NoActivWin
+		return "", errNoActivWin
 	}
 
 	// Ensure the window has expired
 	if time.Now().Unix() < w.Expire {
-		return fmt.Errorf("Window has not expired")
+		return "", fmt.Errorf("Window has not expired")
 	}
 
 	var s string
@@ -79,41 +77,42 @@ func releaseWindow(uid, uname string, args []string) error {
 		s = fmt.Sprintf("%s%s : %s\n", s, u.Name, u.Submission)
 	}
 
-	fmt.Println(s)
-	return nil
+	return s, nil
 }
 
 // addSubmission will add a submission to the current window
-func addSubmission(uid, uname string, args []string) error {
+func addSubmission(uid, uname string, args []string) (string, error) {
 	c := connectRedis()
 	w, err := getWindow(c)
 	if err != nil {
-		return NoActivWin
+		return "", errNoActivWin
 	}
 
 	// ensure the time hasn't expired
 	if time.Now().Unix() > w.Expire {
-		return fmt.Errorf("submission window has expired")
+		return "", fmt.Errorf("submission window has expired")
 	}
 
 	s := strings.Join(args, " ") // rejoin the args into the submission string
 	w.Submissions[uid] = user{uid, uname, s}
 
-	fmt.Fprintf(os.Stderr, "Submitted: %s\n", s)
-
 	// save the window
-	return saveWindow(c, w)
+	if err := saveWindow(c, w); err != nil {
+		return "", err
+	}
+
+	return "", fmt.Errorf("Submitted: %s\n", s)
 }
 
 // newWindow creates a new user submission window
-func newWindow(uid, uname string, args []string) error {
+func newWindow(uid, uname string, args []string) (string, error) {
 	c := connectRedis()
 
 	// Ensure the current window is not active
 	w, err := getWindow(c)
 	if err == nil {
 		if time.Now().Unix() < w.Expire {
-			return fmt.Errorf("current window is still active until %v", time.Unix(w.Expire, 0).Format(timeLayout))
+			return "", fmt.Errorf("current window is still active until %v", time.Unix(w.Expire, 0).Format(timeLayout))
 		}
 	}
 
@@ -125,7 +124,7 @@ func newWindow(uid, uname string, args []string) error {
 	// parse the window duration
 	duration, err := time.ParseDuration(strings.Join(args, " "))
 	if err != nil {
-		return fmt.Errorf("bad time format: %v", err)
+		return "", fmt.Errorf("bad time format: %v", err)
 	}
 
 	// Set the new window
@@ -133,10 +132,10 @@ func newWindow(uid, uname string, args []string) error {
 	w.Owner = uid
 	w.Submissions = make(map[string]user)
 
-	fmt.Printf("New pick window expires at %s\n", time.Unix(w.Expire, 0).Format(timeLayout))
+	resp := fmt.Sprintf("New pick window expires at %s\n", time.Unix(w.Expire, 0).Format(timeLayout))
 
 	// Save the window
-	return saveWindow(c, w)
+	return resp, saveWindow(c, w)
 }
 
 // saveWindow will save the window to redis
@@ -169,8 +168,8 @@ func getWindow(client *redis.Client) (*window, error) {
 
 func connectRedis() *redis.Client {
 	return redis.NewClient(&redis.Options{
-		Addr:     redisAddr,
-		Password: redisPw,
+		Addr:     RedisAddr,
+		Password: RedisPw,
 		DB:       0,
 	})
 }
