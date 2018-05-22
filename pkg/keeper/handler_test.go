@@ -2,10 +2,24 @@ package keeper
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/alicebob/miniredis"
 )
+
+func TestMain(m *testing.M) {
+	rds, err := miniredis.Run()
+	if err != nil {
+		fmt.Println("Failed to start miniredis")
+		os.Exit(1)
+	}
+	defer rds.Close()
+	RedisAddr = rds.Addr()
+	os.Exit(m.Run())
+}
 
 func TestHumanReadableTime(t *testing.T) {
 	c := connectRedis()
