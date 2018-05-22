@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"golang.org/x/crypto/acme/autocert"
 
@@ -93,7 +94,7 @@ func handler(resp http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	text := req.Form["text"]
+	text := strings.Split(req.Form["text"][0], " ")
 	msg, err := keeper.Handle(text[0], req.Form["user_id"][0], req.Form["user_name"][0], text[1:])
 	newReponse(resp, msg, err)
 }
