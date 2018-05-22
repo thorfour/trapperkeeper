@@ -54,9 +54,13 @@ func TestAddNewWindow(t *testing.T) {
 		t.Error("failed to add new window: ", err)
 	}
 
-	_, err := Handle(add, "0", "test", []string{"submission2"})
-	if err != nil {
-		t.Error("failed to add to newly created window: ", err)
+	resp, err := Handle(add, "0", "test", []string{"submission2"})
+	if err == nil {
+		t.Error("unexpected response from add command: ", resp)
+	}
+
+	if !strings.HasPrefix(err.Error(), "Submitted") {
+		t.Error("unexpected error returned: ", err)
 	}
 }
 
@@ -91,9 +95,13 @@ func TestReleaseExpiredWindow(t *testing.T) {
 	}
 
 	for i := 0; i < 10; i++ {
-		_, err := Handle(add, fmt.Sprintf("%v", i), "test", []string{fmt.Sprintf("submit%v", i)})
-		if err != nil {
-			t.Error("error added to valid window: ", err)
+		resp, err := Handle(add, fmt.Sprintf("%v", i), "test", []string{fmt.Sprintf("submit%v", i)})
+		if err == nil {
+			t.Error("unexpected response from add command: ", resp)
+		}
+
+		if !strings.HasPrefix(err.Error(), "Submitted") {
+			t.Error("unexpected error returned: ", err)
 		}
 	}
 
@@ -116,9 +124,13 @@ func TestReleaseNotExpired(t *testing.T) {
 	}
 
 	for i := 0; i < 10; i++ {
-		_, err := Handle(add, fmt.Sprintf("%v", i), "test", []string{fmt.Sprintf("submit%v", i)})
-		if err != nil {
-			t.Error("error added to valid window: ", err)
+		resp, err := Handle(add, fmt.Sprintf("%v", i), "test", []string{fmt.Sprintf("submit%v", i)})
+		if err == nil {
+			t.Error("unexpected response from add command: ", resp)
+		}
+
+		if !strings.HasPrefix(err.Error(), "Submitted") {
+			t.Error("unexpected error returned: ", err)
 		}
 	}
 
