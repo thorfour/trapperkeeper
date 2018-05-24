@@ -16,5 +16,5 @@ push:
 	./build/docker_push.sh $(REPO)
 plugin: 
 	mkdir -p ./bin/plugin
-	CGO_ENABLED=0 GOOS=linux go build -buildmode=plugin -o ./bin/plugin/$(PLUG) ./cmd/plugin/
+	CGO_ENABLED=1 GOOS=linux go build -buildmode=plugin -o ./bin/plugin/$(PLUG) ./cmd/plugin/
 all: docker plugin
