@@ -26,6 +26,7 @@ const (
 	add     = "add"
 	release = "release"
 	current = "window"
+	reset   = "reset"
 
 	timeLayout = "Jan 2 3:04PM MST" // time layout to parse
 
@@ -37,6 +38,7 @@ var lookup = map[string]func(string, string, []string) (string, error){
 	add:     addSubmission,
 	release: releaseWindow,
 	current: currentWindow,
+	reset:   resetWindow,
 }
 
 // Handle will process a given command
@@ -175,10 +177,27 @@ func getWindow(client *redis.Client) (*window, error) {
 	return w, nil
 }
 
+// deleteWindow deletes the current window
+func deleteWindow(client *redis.Client) error {
+	_, err := client.Del(windowKey).Result()
+	return err
+}
+
 func connectRedis() *redis.Client {
 	return redis.NewClient(&redis.Options{
 		Addr:     RedisAddr,
 		Password: RedisPw,
 		DB:       0,
 	})
+}
+
+// resetWindow deletes the current window and all submissions without returning any of them
+func resetWindow(_, uname string, _ []string) (string, error) {
+	c := connectRedis()
+	err := deleteWindow(c)
+	if err != nil {
+		return "", fmt.Errorf("failed to delete window")
+	}
+
+	return fmt.Sprintf("%s has reset the active window", uname), nil
 }
