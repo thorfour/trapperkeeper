@@ -16,6 +16,9 @@ var (
 	RedisAddr string
 	// RedisPw is if the endpoint has a password
 	RedisPw string
+
+	// windowKey that is used to lookup a window. Is set every invocation of Handle
+	windowKey string
 )
 
 const (
@@ -26,7 +29,7 @@ const (
 
 	timeLayout = "Jan 2 3:04PM MST" // time layout to parse
 
-	windowKey = "window" // currently active window key
+	namespace = "keeper" // namespace for window keys
 )
 
 var lookup = map[string]func(string, string, []string) (string, error){
@@ -37,12 +40,18 @@ var lookup = map[string]func(string, string, []string) (string, error){
 }
 
 // Handle will process a given command
-func Handle(cmd, uid, uname string, args []string) (string, error) {
+func Handle(cmd, teamID, uid, uname string, args []string) (string, error) {
 	// Lookup the command
 	f, ok := lookup[cmd]
 	if !ok {
 		return "", errNoCmd
 	}
+
+	if teamID == "" {
+		return "", errNoCmd
+	}
+
+	windowKey = fmt.Sprintf("%v:%v", namespace, teamID)
 
 	// Execute the command
 	return f(uid, uname, args)
