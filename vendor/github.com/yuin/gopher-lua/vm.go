@@ -91,6 +91,19 @@ func copyReturnValues(L *LState, regv, start, n, b int) { // +inline-start
 			}
 			rg.top = regv + n
 		}
+		if b > 1 && n > (b-1) {
+			// this section is inlined by go-inline
+			// source function is 'func (rg *registry) FillNil(regm, n int) ' in '_state.go'
+			{
+				rg := L.reg
+				regm := regv + b - 1
+				n := n - (b - 1)
+				for i := 0; i < n; i++ {
+					rg.array[regm+i] = LNil
+				}
+				rg.top = regm + n
+			}
+		}
 	}
 } // +inline-end
 
@@ -774,9 +787,9 @@ func init() {
 				cf.Pc = 0
 				cf.Base = RA
 				cf.LocalBase = RA + 1
-				cf.ReturnBase = cf.ReturnBase
+				// cf.ReturnBase = cf.ReturnBase
 				cf.NArgs = nargs
-				cf.NRet = cf.NRet
+				// cf.NRet = cf.NRet
 				cf.TailCall++
 				lbase := cf.LocalBase
 				if meta {
@@ -948,6 +961,19 @@ func init() {
 							}
 							rg.top = regv + n
 						}
+						if b > 1 && n > (b-1) {
+							// this section is inlined by go-inline
+							// source function is 'func (rg *registry) FillNil(regm, n int) ' in '_state.go'
+							{
+								rg := L.reg
+								regm := regv + b - 1
+								n := n - (b - 1)
+								for i := 0; i < n; i++ {
+									rg.array[regm+i] = LNil
+								}
+								rg.top = regm + n
+							}
+						}
 					}
 				}
 				switchToParentThread(L, n, false, true)
@@ -985,6 +1011,19 @@ func init() {
 							}
 						}
 						rg.top = regv + n
+					}
+					if b > 1 && n > (b-1) {
+						// this section is inlined by go-inline
+						// source function is 'func (rg *registry) FillNil(regm, n int) ' in '_state.go'
+						{
+							rg := L.reg
+							regm := regv + b - 1
+							n := n - (b - 1)
+							for i := 0; i < n; i++ {
+								rg.array[regm+i] = LNil
+							}
+							rg.top = regm + n
+						}
 					}
 				}
 			}
@@ -1226,7 +1265,6 @@ func numberArith(L *LState, opcode int, lhs, rhs LNumber) LNumber {
 		return LNumber(math.Pow(flhs, frhs))
 	}
 	panic("should not reach here")
-	return LNumber(0)
 }
 
 func objectArith(L *LState, opcode int, lhs, rhs LValue) LValue {

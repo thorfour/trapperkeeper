@@ -1,0 +1,26 @@
+version: 2
+jobs:
+  build:
+    working_directory: /go/src/github.com/thorfour/trapperkeeper
+    docker:
+    - image: circleci/golang:1.11
+    steps:
+    - setup_remote_docker
+    - checkout
+    - run:
+        name: build
+        command: |
+            mkdir -p ./bin/server
+            CGO_ENABLED=0 GOOS=linux go build -o ./bin/server/trapperkeeper ./cmd/server
+            cp /etc/ssl/certs/ca-certificates.crt .
+            docker build -t quay.io/thorfour/trapperkeeper .
+            echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin quay.io
+            docker push quay.io/thorfour/trapperkeeper
+workflows:
+  version: 2
+  post-merge:
+    jobs:
+    - build:
+        filters:
+          branches:
+            only: master

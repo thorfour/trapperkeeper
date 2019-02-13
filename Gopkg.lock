@@ -13,8 +13,8 @@
     ".",
     "server"
   ]
-  revision = "5bcd02f955181a2e593f1ec6e08ed6ebb6e282b4"
-  version = "2.4.3"
+  revision = "7aa580c6d4761b53c007d24aa18e730fef3e00d4"
+  version = "v2.4.6"
 
 [[projects]]
   name = "github.com/gomodule/redigo"
@@ -26,6 +26,30 @@
   version = "v2.0.0"
 
 [[projects]]
+  name = "github.com/gorilla/mux"
+  packages = ["."]
+  revision = "a7962380ca08b5a188038c69871b8d3fbdf31e89"
+  version = "v1.7.0"
+
+[[projects]]
+  name = "github.com/konsorten/go-windows-terminal-sequences"
+  packages = ["."]
+  revision = "5c8c8bd35d3832f5d134ae1e1e375b69a4d25242"
+  version = "v1.0.1"
+
+[[projects]]
+  name = "github.com/sirupsen/logrus"
+  packages = ["."]
+  revision = "e1e72e9de974bd926e5c56f83753fba2df402ce5"
+  version = "v1.3.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/thorfour/sillyputty"
+  packages = ["pkg/sillyputty"]
+  revision = "78c490def6e8f0204ecaad5b3018df62d89a7388"
+
+[[projects]]
   branch = "master"
   name = "github.com/yuin/gopher-lua"
   packages = [
@@ -34,16 +58,26 @@
     "parse",
     "pm"
   ]
-  revision = "b0fa786cf4ea360285924c4a7fd42325be57aec8"
+  revision = "8bfc7677f583b35a5663a9dd934c08f3b5774bbb"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
   packages = [
     "acme",
-    "acme/autocert"
+    "acme/autocert",
+    "ssh/terminal"
   ]
-  revision = "ab813273cd59e1333f7ae7bff5d027d4aadf528c"
+  revision = "74369b46fc6756741c016591724fd1cb8e26845f"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/sys"
+  packages = [
+    "unix",
+    "windows"
+  ]
+  revision = "3b5209105503162ded1863c307ac66fec31120dd"
 
 [[projects]]
   name = "gopkg.in/redis.v5"
@@ -61,6 +95,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "3bcbbe0e21d06296952ae56b177a550e6059e4fa50616600633d3112b9942ecf"
+  inputs-digest = "bbb93247f4d1586657a02d77e5fb3372f958e06e138dc7e6ad6a7bb5b0ea3bd7"
   solver-name = "gps-cdcl"
   solver-version = 1
