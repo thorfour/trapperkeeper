@@ -92,8 +92,6 @@ spec:
       containers:
       - image: redis:5.0.3
         name: redis
-        ports:
-        - containerPort: 6380
         volumeMounts:
           - name: redis-persistent-storage
             mountPath: /data
@@ -102,8 +100,8 @@ spec:
         ports:
         - containerPort: 80
         env:
-          - name: REDIS_ADDR
-            value: redis
+          - name: REDISADDR
+            value: 127.0.0.1:6379
       volumes:
       - name: redis-persistent-storage
         persistentVolumeClaim:
