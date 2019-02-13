@@ -11,7 +11,7 @@ jobs:
         name: build
         command: |
             mkdir -p ./bin/server
-            CGO_ENABLED=0 GOOS=linux go build -o ./bin/server/trapperkeeper ./cmd/server
+            CGO_ENABLED=0 GOOS=linux go build -o ./bin/server/pick ./cmd/server/
             cp /etc/ssl/certs/ca-certificates.crt .
             docker build -t quay.io/thorfour/trapperkeeper .
             echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin quay.io
