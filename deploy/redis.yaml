@@ -1,0 +1,110 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: slack-apps
+  labels:
+    app.kubernetes.io/name: slack-apps
+---
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: Certificate
+metadata:
+  name: trapperkeeper-crt
+  namespace: slack-apps
+spec:
+  secretName: trapperkeeper-crt
+  dnsNames:
+  - appsbeta.thor-hansen.com
+  acme:
+    config:
+    - http01:
+        ingressClass: nginx
+      domains:
+      - appsbeta.thor-hansen.com
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  namespace: slack-apps
+  name: trapperkeeper-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /v1/pick
+    certmanager.k8s.io/cluster-issuer: letsencrypt-prod
+spec:
+  tls:
+  - hosts:
+    - appsbeta.thor-hansen.com
+    secretName: trapperkeeper-crt
+  rules:
+  - host: appsbeta.thor-hansen.com
+    http:
+      paths:
+      - path: /v1/pick
+        backend:
+          serviceName: trapperkeeper
+          servicePort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: slack-apps
+  labels: 
+    app: trapperkeeper
+spec:
+  selector: 
+    app: trapperkeeper
+  ports:
+  - protocol: TCP
+    port: 80
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-pv-claim
+  namespace: slack-apps
+  labels:
+    app: trapperkeeper
+spec:
+  storageClassName: do-block-storage
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: trapperkeeper
+  namespace: slack-apps
+  labels:
+    app: trapperkeeper
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: trapperkeeper
+    spec:
+      containers:
+      - image: redis:5.0.3
+        name: redis
+        ports:
+        - containerPort: 6380
+        volumeMounts:
+          - name: redis-persistent-storage
+            mountPath: /data
+      - image: quay.io/thorfour/trapperkeeper:v1.2.0
+        name: trapperkeeper
+        ports:
+        - containerPort: 80
+        env:
+          - name: REDIS_ADDR
+            value: redis
+      volumes:
+      - name: redis-persistent-storage
+        persistentVolumeClaim:
+          claimName: redis-pv-claim
